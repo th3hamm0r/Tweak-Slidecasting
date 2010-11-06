@@ -6886,13 +6886,15 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
 (function($) {
     var style;
     
+    var currentContent;
+    
     var insertTweakInterface = function() {
         removeTweakInterface();
         // html
         var toolbarMainContent = [
             '<ul class="commands">',
             '<li><a href="#" class="button slides toggleNotes inactive off"><span class="off">Hide Notes</span><span class="on">Show Notes</span></a></li>',
-            '<li><a href="#" class="button slides toggleMaximizeSlides inactive off"><span class="off">Maximize Slides</span><span class="on">Minimize Slides</span></a></li>',
+            '<li><a href="#" class="button toggleMaximizeContent inactive off"><span class="off">Maximize Content</span><span class="on">Minimize Content</span></a></li>',
             '</ul>',
             '<a href="#" class="button refresh">Refresh</a><a href="#" class="button exit">Exit</a>'
         ].join('');
@@ -6925,7 +6927,7 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
         });
         
         $('.tweakdashboard.main .refresh').click(function() {
-            updateTweaks();
+            updateCurrentHandler();
         });
         
         $('.tweakdashboard.main .button.active.toggleNotes').live('click', function() {
@@ -6943,7 +6945,7 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
             }
         });
         
-        $('.tweakdashboard.main .button.active.toggleMaximizeSlides').live('click', function() {
+        $('.tweakdashboard.main .button.active.toggleMaximizeContent').live('click', function() {
             var b = $(this);
             
             b.toggleClass('on');
@@ -6957,7 +6959,9 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
             }
         });
         
-        updateTweaks();
+        injectLoadHandler();
+        
+        updateCurrentHandler();
     };
     
     var removeTweakInterface = function() {
@@ -6969,24 +6973,147 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
         $(style).remove();
     };
     
-    var updateTweaks = function() {
-        if ($('.slide_table, .content > table').length > 0) {
+    var updateCurrentHandler = function() {
+        if (app == "slidecasting") {
             $('.tweakdashboard .button.slides').removeClass('inactive').addClass('active');
-            
-            if ($('.content.maximize').length > 0) {
-                var b = $('.tweakdashboard.main .button.active.toggleMaximizeSlides');
-                b.addClass('on');
-                b.removeClass('off');
-            }
-                
             
             $('.header_comments .toggleNotes').remove();
             $('.header_comments').append('<a href="#" class="toggleNotes">show/hide</a>').click(function() {
                 $(this).next('div').toggle();
             });
+            
+            //$('.tweakdashboard.main .button.toggleNotes').hasClass('on')
         } else {
             $('.tweakdashboard .button.slides').removeClass('active').addClass('inactive');
+        }
+        
+        if (app == "livecast") {
+        
+        } else {
+        
+        }
+        
+        // maximize content
+        $('.tweakdashboard .button.toggleMaximizeContent').removeClass('inactive').addClass('active');
+        var b = $('.tweakdashboard.main .button.toggleMaximizeContent');
+        
+        if ($('.tweakdashboard .button.toggleMaximizeContent').hasClass('on')) {
+            b.addClass('on');
+            b.removeClass('off');
+            sidebar('hide');
+            $('.content').addClass('maximize');
+        } else {
+            b.removeClass('on');
+            b.addClass('off');
             $('.content').removeClass('maximize');
+            // hide in horiz?
+        }
+    };
+    
+    var injectLoadHandler = function() {
+        window.content_ajax_request = function(content) {
+            switch(content){  
+                case "dashboard":  
+                    app = "dashboard";
+                    $('.content').load(base_url+"dashboard/content/"+course+"/", updateCurrentHandler);
+                    break;
+                case "newsfeed":  
+                    app = "dashboard";
+                    $('.content').load(base_url+"dashboard/newsfeed/"+course+"/", updateCurrentHandler);
+                    break;
+                case "slides":  
+                    
+                    $.getJSON(base_url+"slidecasting/ajax_studio_router/"+course+"/", function(json_response)
+                    { 
+                        if (json_response.slidecasting_mode == 'studio')
+                        {
+                            app = "slidecasting";
+                            $('.content').html(json_response.rendered_html)   
+                            if (json_response.slidecasting_view_mode == 'horiz')
+                            {
+                                //alert("horiz, ha?")
+                                set_mode('wide');
+                            } 
+                        }
+                        else
+                        {
+                            if (json_response.slidecasting_mode == 'livecast')
+                            {
+                                app = "livecast";
+                                // set livecast variables
+                                lecture_tag = json_response.lecture_tag;
+                                current_time_com = json_response.current_time_com;
+                                current_time_sld = json_response.current_time_sld;
+                                // call slide_update, comment_update and marker_update to start the livecast
+                                setTimeout("updateSlide(current_time_sld)",100);
+                                setTimeout("updateComment()", 50)
+                                // hang in the content
+                                $('.content').html(json_response.rendered_html);
+                            }
+                            
+                            else
+                                $('.content').html('something wrent wrong here. could not load any slides. an email with the errormessage should be on the way.')                        
+                        }
+                        updateCurrentHandler();
+                    });
+                    
+                    //$('.content').load(base_url+"slidecasting/ajax_studio_router/"+course+"/");
+                    break;
+                case "activities":  
+                    $('.content').load(media_url+"dashboard-media/css/dashboard_sidebar.css", updateCurrentHandler);
+                    break;
+                case "portfolio":  
+                    $('.content').load(base_url+"portfolio/"+course+"/", function(){
+                    	window.portfolio = new Portfolio();
+                    	portfolio.onload();
+                    	updateCurrentHandler();
+                    });
+                    break;
+                default:
+                    $('.content').load(base_url+"dashboard/content/"+course+"/", updateCurrentHandler);
+                    break;  
+            }
+        }
+        
+        window.loadStudio = function(url)
+        {
+            /*
+            if (url.indexOf("horizontal") != -1)
+                noSidebar();
+            else
+                fullSidebar();
+            */    
+            //$('.content').load(url);
+
+            $.getJSON(url, function(json_response)
+            { 
+                if (json_response.slidecasting_mode == 'studio')
+                {
+                    app = "slidecasting";
+                    $('.content').html(json_response.rendered_html)    
+                }
+                else
+                {
+                    if (json_response.slidecasting_mode == 'livecast')
+                    {
+                        app = "livecast";
+                        // set livecast variables
+                        lecture_tag = json_response.lecture_tag;
+                        current_time_com = json_response.current_time_com;
+                        current_time_sld = json_response.current_time_sld;
+                        // call slide_update, comment_update and marker_update to start the livecast
+                        setTimeout("updateSlide(current_time_sld)",100);
+                        setTimeout("updateComment()", 50)
+                        // hang in the content
+                        $('.content').html(json_response.rendered_html);
+                    }
+                    
+                    else
+                        $('.content').html('something wrent wrong here. sorry for the inconvinience.')                        
+                }
+                updateCurrentHandler();
+            });
+
         }
     };
     
