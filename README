@@ -6,15 +6,32 @@ TWEAK SLIDECASTING
 
 You have to create an bookmark with following url content:
 
-javascript:(function(){var%20script=document.createElement('script');script.src='https://github.com/th3hamm0r/Tweak-Slidecasting/raw/master/tweak.js';document.getElementsByTagName('head')[0].appendChild(script);})()
+javascript:(function(){if(document.getElementById('tweakdashboard')===null){var%20script=document.createElement('script');script.src='http://localhost/stefan/uni/interface/tweakslidecasting/tweak.js';document.getElementsByTagName('head')[0].appendChild(script);}})()
 
 This code will load and start the javascript file from the git repository.
 As a result a red box with commands should appear at the top left corner.
 
+To properly reload the script, you have to reload the page and click the bookmark again.
 
-2. BROWSER SUPPORT
 
-Tested with:
+2. TWEAKS
+
+ * general:
+   - maximize/minimize main content
+   - history function for sub pages (with some exceptions, eg. 'portfolio' functions)
+
+ * slides:
+   - overall show/hide of notes
+   - show/hide per note
+   - sub menus:
+     - on click, close other sub menus
+   - date menu:
+     - direct access to 'all' slides and further horizontal/vertical view
+
+
+3. BROWSER SUPPORT
+
+Testing with:
 
  * Mozilla Firefox 3.6.11
  * Google Chrome 5.0.375.126
