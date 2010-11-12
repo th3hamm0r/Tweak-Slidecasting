@@ -6,7 +6,7 @@ TWEAK SLIDECASTING
 
 You have to create an bookmark with following url content:
 
-javascript:(function(){if(document.getElementById('tweakdashboard')===null){var%20script=document.createElement('script');script.src='http://localhost/stefan/uni/interface/tweakslidecasting/tweak.js';document.getElementsByTagName('head')[0].appendChild(script);}})()
+javascript:(function(){if(document.getElementById('tweakdashboard')===null){var%20script=document.createElement('script');script.src='https://github.com/th3hamm0r/Tweak-Slidecasting/raw/master/tweak.js';document.getElementsByTagName('head')[0].appendChild(script);}})()
 
 This code will load and start the javascript file from the git repository.
 As a result a red box with commands should appear at the top left corner.
