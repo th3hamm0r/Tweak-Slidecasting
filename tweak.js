@@ -7942,48 +7942,41 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
                     $('.content').load(base_url+"dashboard/content/"+course+"/", updateCurrentHandler);
                     break;  
             }
-        }
+        };
         
         window.loadStudio = function(url)
-        {
-            /*
-            if (url.indexOf("horizontal") != -1)
-                noSidebar();
-            else
-                fullSidebar();
-            */    
-            //$('.content').load(url);
+	{    
+	    $.getJSON(url, function(json_response)
+	    { 
+		if (json_response.slidecasting_mode == 'studio' | json_response.slidecasting_mode == 'new_comments_since' | json_response.slidecasting_mode == 'marked_slides' | json_response.slidecasting_mode == 'exercises' | json_response.slidecasting_mode == 'discourses' )
+		{
+		    app = "slidecasting";
+		    $('.content').html(json_response.rendered_html)    
+		}
+		else
+		{
+		    if (json_response.slidecasting_mode == 'livecast')
+		    {
+		        app = "livecast";
+		        // set livecast variables
+		        lecture_tag = json_response.lecture_tag;
+		        current_time_com = json_response.current_time_com;
+		        current_time_sld = json_response.current_time_sld;
+		        // call slide_update, comment_update and marker_update to start the livecast
+		        setTimeout("updateSlide(current_time_sld)",100);
+		        setTimeout("updateComment()", 50)
+		        // hang in the content
+		        $('.content').html(json_response.rendered_html);
+		    }
+		    
+		    else
+		    {
+		        $('.content').html('this should not have happened. what were you trying to load? please report to our <a href="http://twoday.tuwien.ac.at/feedback/"> feedback-blog</a>. we will fix this as soon as possible.')  
+		    }                      
+		}
+	    });
 
-            $.getJSON(url, function(json_response)
-            { 
-                if (json_response.slidecasting_mode == 'studio')
-                {
-                    app = "slidecasting";
-                    $('.content').html(json_response.rendered_html)    
-                }
-                else
-                {
-                    if (json_response.slidecasting_mode == 'livecast')
-                    {
-                        app = "livecast";
-                        // set livecast variables
-                        lecture_tag = json_response.lecture_tag;
-                        current_time_com = json_response.current_time_com;
-                        current_time_sld = json_response.current_time_sld;
-                        // call slide_update, comment_update and marker_update to start the livecast
-                        setTimeout("updateSlide(current_time_sld)",100);
-                        setTimeout("updateComment()", 50)
-                        // hang in the content
-                        $('.content').html(json_response.rendered_html);
-                    }
-                    
-                    else
-                        $('.content').html('something wrent wrong here. sorry for the inconvinience.')                        
-                }
-                updateCurrentHandler();
-            });
-
-        }
+	};
     };
     
     insertTweakInterface();
